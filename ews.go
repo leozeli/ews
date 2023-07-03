@@ -69,6 +69,13 @@ func (c *client) SendAndReceive(body []byte) ([]byte, error) {
 	bb = append(bb, body...)
 	bb = append(bb, soapEnd...)
 
+	client := &http.Client{
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
+
+	applyConfig(c.config, client)
 	req, err := http.NewRequest("POST", c.EWSAddr, bytes.NewReader(bb))
 	if err != nil {
 		return nil, err
@@ -78,13 +85,6 @@ func (c *client) SendAndReceive(body []byte) ([]byte, error) {
 
 	req.SetBasicAuth(c.Username, c.Password)
 	req.Header.Set("Content-Type", "text/xml")
-
-	client := &http.Client{
-		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			return http.ErrUseLastResponse
-		},
-	}
-	applyConfig(c.config, client)
 
 	resp, err := client.Do(req)
 	if err != nil {
