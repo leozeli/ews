@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"github.com/Azure/go-ntlmssp"
+	"golang.org/x/net/http2"
 	"io/ioutil"
 	"net/http"
 	"net/http/httputil"
@@ -29,6 +30,7 @@ type Config struct {
 	Dump    bool
 	NTLM    bool
 	SkipTLS bool
+	HTTP2   bool
 }
 
 type Client interface {
@@ -109,6 +111,11 @@ func applyConfig(config *Config, client *http.Client) {
 	}
 	if config.SkipTLS {
 		http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	}
+	if config.HTTP2 {
+		client.Transport = &http2.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		}
 	}
 }
 
