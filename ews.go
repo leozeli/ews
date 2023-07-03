@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/Azure/go-ntlmssp"
 	"golang.org/x/net/http2"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httputil"
 )
@@ -97,7 +97,7 @@ func (c *client) SendAndReceive(body []byte) ([]byte, error) {
 		return nil, NewError(resp)
 	}
 
-	respBytes, err := ioutil.ReadAll(resp.Body)
+	respBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
@@ -107,7 +107,9 @@ func (c *client) SendAndReceive(body []byte) ([]byte, error) {
 
 func applyConfig(config *Config, client *http.Client) {
 	if config.NTLM {
-		client.Transport = ntlmssp.Negotiator{}
+		client.Transport = ntlmssp.Negotiator{
+			RoundTripper: &http2.Transport{},
+		}
 	}
 	if config.SkipTLS {
 		http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
